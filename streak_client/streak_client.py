@@ -19,7 +19,7 @@ class StreakClientBaseObject(object):
 		self.api_base_uri = 'www.streak.com/api'
 		self.api_version = 'v1'
 		#consolidate attributes and build the URI
-						
+
 		self.api_uri = "%(api_protocol)s://%(api_base_uri)s/%(api_version)s" \
 						% self.__dict__
 
@@ -28,7 +28,7 @@ class StreakClientBaseObject(object):
 	def _parse_init_args(self, **kwargs):
 		#updates a dict with the keyword args
 		self.attributes.update(kwargs)
-	
+
 	def _get_req_fp(self, op):
 		'''Decisions on what verb to use and content headers happen here
 		Args:
@@ -45,20 +45,20 @@ class StreakClientBaseObject(object):
 				return requests.delete, None
 		else:
 			raise NotImplementedError('Operation {} is not supported!'.format(op))
-	
+
 	def _req(self, op, uri, payload = None):
 		'''HTTP  reequest wrapper with data packaging fucntionality
 		Args:
 			op 			http verb in str
 			uri 		address of the request
-			payload		data to be sent in dict format (default: None) 
+			payload		data to be sent in dict format (default: None)
 						If not provided no data is sent
 			return 		code and req response dict (single or list)'''
 		if DEBUG:
 			print(('uri', uri))
 
 		req_fp, content_type = self._get_req_fp(op)
-		
+
 		if payload:
 			if content_type:
 				r = req_fp(uri, payload, auth = self.api_auth, headers = content_type)
@@ -66,19 +66,19 @@ class StreakClientBaseObject(object):
 				r = req_fp(uri, payload, auth = self.api_auth)
 		else:
 			r = req_fp(uri, auth = self.api_auth)
-		
+
 		if r.status_code == requests.codes.ok:
 			data = r.json()
 		else:
 			data = None
 			pass
-		#keep for debugging 
+		#keep for debugging
 
 		#in case there's an error and we're debugging
 		self._parse_req(r)
 
 		return r.status_code, data
-	
+
 	def _form_encode(self, **kwargs):
 		out_string = '&'.join(str(k) + '=' + str(v) for k,v in kwargs.items() if v is not None)
 		return out_string
@@ -152,7 +152,7 @@ class StreakClient(StreakClientBaseObject):
 
 	def _raise_unimplemented_error(self):
 		'''Exception helper for raising exceptions for unimplemented class members'''
-		import inspect 
+		import inspect
 		raise NotImplementedError("{} is not implemented yet!".format(inspect.stack()[0][3]))
 	###
 	#User Methods
@@ -162,13 +162,13 @@ class StreakClient(StreakClientBaseObject):
 		Args:
 			key			user key (default: me)
 			return		(status code for the get request, dict user data)
-		''' 	
+		'''
 		if key:
 			uri = self.api_uri + "/users/" + key
 		else:
 			uri = self.api_uri + "/users/me"
 
-		return self._req('get', uri)	
+		return self._req('get', uri)
 	###
 	#Pipeline Methods
 	###
@@ -178,7 +178,7 @@ class StreakClient(StreakClientBaseObject):
 		This is a directory for what we could ask for.
 		Args:
 			pipeline_key	specifies pipeline to get. (default = None i.e. ALL)
-			sort_by			in desc order by 'creationTimestamp' or 
+			sort_by			in desc order by 'creationTimestamp' or
 							'lastUpdatedTimestamp' (ignored when a pipeline_key
 							is supplied)
 			returns 		(status code for the GET request, dict of pipelines)
@@ -196,8 +196,8 @@ class StreakClient(StreakClientBaseObject):
 			if sort_by:
 				if sort_by in ['creationTimestamp', 'lastUpdatedTimestamp']:
 					uri += self.sort_by_postfix + sort_by
-				else:		
-					return requests.codes.bad_request, {'success' : 'False', 
+				else:
+					return requests.codes.bad_request, {'success' : 'False',
 												'error': 'sortBy needs to be \'creationTimestamp\', or \'lastUpdatedTimestamp\''}
 
 
@@ -218,7 +218,7 @@ class StreakClient(StreakClientBaseObject):
 			return self._req('delete', uri)
 		else:
 			return requests.codes.bad_request, None
-	
+
 	def delete_all_pipelines(self):
 		'''Deletes all pipelines
 		Args:
@@ -231,13 +231,13 @@ class StreakClient(StreakClientBaseObject):
 				if c != requests.codes.ok:
 					code = c
 					data = d
-		return code, data		
+		return code, data
 
 	def create_pipeline(self, name, description, **kwargs):
 		'''Creates a pipeline with the provided attributes.
 		Args:
 			name	required name string
-			kwargs	{name, description, orgWide, aclEntries} user 
+			kwargs	{name, description, orgWide, aclEntries} user
 			specifiable ones only
 			return	(status code, pipeline_dict) (as created)
 		'''
@@ -253,9 +253,9 @@ class StreakClient(StreakClientBaseObject):
 						self.pipelines_suffix
 						])
 		code, r_data = self._req('put', uri, new_pl.to_dict())
-		
+
 		return code, r_data
-	
+
 	def update_pipeline(self, pipeline):
 		'''Updates a pipeline with the provided attributes.
 		Args:
@@ -278,7 +278,7 @@ class StreakClient(StreakClientBaseObject):
 						])
 		except KeyError:
 			return requests.codes.bad_request, None
-	
+
 		code, r_data = self._req('post', uri , json.dumps(payload))
 
 		return code, r_data
@@ -292,7 +292,7 @@ class StreakClient(StreakClientBaseObject):
 		Args:
 			box_key		key for the target box (default: None i.e. ALL)
 			sort_by		in desc order by 'creationTimestamp' or 'lastUpdatedTimestamp'
-			returns 	(status code for the GET request, dict of box or a list thereof) 
+			returns 	(status code for the GET request, dict of box or a list thereof)
 		'''
 		uri = '/'.join([
 						self.api_uri,
@@ -306,8 +306,8 @@ class StreakClient(StreakClientBaseObject):
 		if sort_by:
 				if sort_by in ['creationTimestamp', 'lastUpdatedTimestamp']:
 					uri += self.sort_by_postfix + sort_by
-				else:		
-					return requests.codes.bad_request, {'success' : 'False', 
+				else:
+					return requests.codes.bad_request, {'success' : 'False',
 												'error': 'sortBy needs to be \'creationTimestamp\', or \'lastUpdatedTimestamp\''}
 		return self._req('get', uri)
 
@@ -317,7 +317,7 @@ class StreakClient(StreakClientBaseObject):
 			pipeline_key	key for pipeline
 			sort_by			in desc order by 'creationTimestamp' or 'lastUpdatedTimestamp'
 							Not sure if it is supported
-			returns 		(status code for the GET request, dict of boxes) 
+			returns 		(status code for the GET request, dict of boxes)
 		'''
 		if not pipeline_key:
 			return requests.codes.bad_request, None
@@ -325,16 +325,17 @@ class StreakClient(StreakClientBaseObject):
 		uri = '/'.join([
 						self.api_uri,
 						self.pipelines_suffix,
-						pipeline_key
+						pipeline_key,
+						self.boxes_suffix
 						])
-		
+
 		if sort_by:
 				if sort_by in ['creationTimestamp', 'lastUpdatedTimestamp']:
 					uri += self.sort_by_postfix + sort_by
-				else:		
-					return requests.codes.bad_request, {'success' : 'False', 
+				else:
+					return requests.codes.bad_request, {'success' : 'False',
 												'error': 'sortBy needs to be \'creationTimestamp\', or \'lastUpdatedTimestamp\''}
-		
+
 		return self._req('get', uri)
 
 	def delete_box(self, key):
@@ -364,16 +365,16 @@ class StreakClient(StreakClientBaseObject):
 						self.pipelines_suffix,
 						pipeline_key,
 						self.boxes_suffix
-						]) 
+						])
 
 		kwargs.update({'name':name})
 
 		new_box = StreakBox(**kwargs)
-		
+
 		code, data = self._req('put', uri, new_box.to_dict(rw = True))
-		
+
 		return code, data
-	
+
 	def update_box(self, box):
 		'''Updates a box with the provided attributes.
 		Args:
@@ -391,7 +392,7 @@ class StreakClient(StreakClientBaseObject):
 			uri = self.box_root_uri + '/' + box.attributes['boxKey']
 		except KeyError:
 			return requests.codes.bad_request, None
-	
+
 		code, data = self._req('post', uri , json.dumps(payload))
 
 		return code, data
@@ -431,7 +432,7 @@ class StreakClient(StreakClientBaseObject):
 							])
 
 		code, data =  self._req('get', uri)
-		
+
 		return code, data
 	###
 	#Stage Methods
@@ -460,22 +461,22 @@ class StreakClient(StreakClientBaseObject):
 							uri,
 							stage_key
 							])
-		
+
 		if sort_by:
 				if sort_by in ['creationTimestamp', 'lastUpdatedTimestamp']:
 					uri += self.sort_by_postfix + sort_by
-				else:		
-					return requests.codes.bad_request, {'success' : 'False', 
+				else:
+					return requests.codes.bad_request, {'success' : 'False',
 												'error': 'sortBy needs to be \'creationTimestamp\', or \'lastUpdatedTimestamp\''}
 
 		code, data = self._req('get', uri)
-		
+
 		#format is ambigious so we need to rely on user input
 		if stage_key:
 			data = list(data.values())
-		
+
 		return code, data
-		
+
 	def create_pipeline_stage(self, pipeline_key, name, **kwargs):
 		'''Creates a pipeline stage with the provided attributes.
 		Args:
@@ -492,22 +493,22 @@ class StreakClient(StreakClientBaseObject):
 						self.pipelines_suffix,
 						pipeline_key,
 						self.stages_suffix])
-		
+
 		kwargs.update({'name':name})
 
 		new_box = StreakStage(**kwargs)
-		
+
 		code, data = self._req('put', uri, new_box.to_dict(rw = True))
-		
+
 		return code, data
-	
+
 	def delete_pipeline_stage(self, pipeline_key, stage_key, sort_by = None):
 		'''Deletes a stage in the pipeline by stage key and pipeline key
 		Args:
 			pipeline_key	key for pipeline
 			stage_key		key for stage
 			sort_by			in desc order by 'creationTimestamp' or 'lastUpdatedTimestamp'
-			returns 		(status code for the GET request, dict of op report) 
+			returns 		(status code for the GET request, dict of op report)
 		'''
 		if not (pipeline_key and stage_key):
 			return requests.codes.bad_request, None
@@ -519,9 +520,9 @@ class StreakClient(StreakClientBaseObject):
 						self.stages_suffix,
 						stage_key
 						])
-		
+
 		code, data = self._req('delete', uri)
-		
+
 		return code, data
 
 	def update_pipeline_stage(self, stage):
@@ -538,7 +539,7 @@ class StreakClient(StreakClientBaseObject):
 			return requests.codes.bad_request, None
 
 		payload = stage.to_dict(rw = True)
-	
+
 		#print(new_pl.attributes)
 		#print(new_pl.to_dict())
 		#raw_input()
@@ -551,9 +552,9 @@ class StreakClient(StreakClientBaseObject):
 							])
 		except KeyError:
 			return requests.codes.bad_request, None
-	
+
 		code, data = self._req('post', uri , json.dumps(payload))
-		
+
 		return code, data
 	###
 	#Fields Methods
@@ -569,7 +570,7 @@ class StreakClient(StreakClientBaseObject):
 		'''
 		#req sanity check
 		if not (name and (field_type in ['TEXT_INPUT', 'DATE', 'PERSON'])):
-			return requests.codes.bad_request, {'success' : 'False', 
+			return requests.codes.bad_request, {'success' : 'False',
 												'error': 'name needs to be provided and field_type needs to be \'TEXT_INPUT\', \'DATE\' or \'PERSON\''}
 
 		kwargs.update({'name':name, 'type':field_type})
@@ -579,7 +580,7 @@ class StreakClient(StreakClientBaseObject):
 		#print(new_pl.to_dict())
 		#raw_input()
 		code, data = self._req('put', uri, new_box.to_dict(rw = True))
-		
+
 		return code, data
 
 	def _update_field(self, uri, field):
@@ -596,20 +597,20 @@ class StreakClient(StreakClientBaseObject):
 			return requests.codes.bad_request, None
 
 		payload = field.to_dict(rw = True)
-	
+
 		#print(new_pl.attributes)
 		#print(new_pl.to_dict())
 		#raw_input()
 		try:
 			uri = '/'.join([
-							uri, 
+							uri,
 							field.attributes['key']
 							])
 		except KeyError:
 			return requests.codes.bad_request, None
-	
+
 		code, data = self._req('post', uri , json.dumps(payload))
-		
+
 		return code, data
 
 	def get_pipeline_field(self, pipeline_key, field_key = None):
@@ -620,9 +621,9 @@ class StreakClient(StreakClientBaseObject):
 			returns				status code, field dict or list thereof
 		'''
 		uri = '/'.join([
-						self.api_uri, 
-						self.pipelines_suffix, 
-						pipeline_key, 
+						self.api_uri,
+						self.pipelines_suffix,
+						pipeline_key,
 						self.fields_suffix
 						])
 		if field_key:
@@ -645,9 +646,9 @@ class StreakClient(StreakClientBaseObject):
 						pipeline_key,
 						self.fields_suffix
 						])
-		
+
 		code, data = self._create_field(uri, name, field_type, **kwargs)
-		
+
 		return code, data
 
 	def update_pipeline_field(self, pipeline_key, field):
@@ -674,9 +675,9 @@ class StreakClient(StreakClientBaseObject):
 		'''
 		uri = '/'.join([
 						self.api_uri,
-						self.pipelines_suffix, 
-						pipeline_key, 
-						self.fields_suffix, 
+						self.pipelines_suffix,
+						pipeline_key,
+						self.fields_suffix,
 						field_key
 						])
 
@@ -691,7 +692,7 @@ class StreakClient(StreakClientBaseObject):
 		'''
 		#does not work
 		self._raise_unimplemented_error()
-		
+
 		uri = '/'.join([self.api_uri,
 						self.boxes_suffix,
 						box_key,
@@ -713,15 +714,15 @@ class StreakClient(StreakClientBaseObject):
 		'''
 		#does not work
 		self._raise_unimplemented_error()
-		
+
 		uri = '/'.join([self.api_uri,
-						self.boxes_suffix, 
+						self.boxes_suffix,
 						box_key,
 						self.fields_suffix
 						])
-		
+
 		code, data = self._create_field(uri, name, field_type, **kwargs)
-		
+
 		return code, data
 
 	def update_box_field(self, box_key, field):
@@ -733,14 +734,14 @@ class StreakClient(StreakClientBaseObject):
 		'''
 		#does not work
 		self._raise_unimplemented_error()
-		
+
 		uri = '/'.join([self.api_uri,
 						self.boxes_suffix,
 						box_key,
 						self.fields_suffix
 						])
 		return self._update_field(uri, field)
-	
+
 	def delete_box_field(self, box_key, field_key):
 		'''Deletes pipeline field as specified by key(s)
 		Args:
@@ -751,10 +752,10 @@ class StreakClient(StreakClientBaseObject):
 		#does not work
 		self._raise_unimplemented_error()
 
-		uri = '/'.join([self.api_uri, 
-						self.boxes_suffix, 
-						box_key, 
-						self.fields_suffix, 
+		uri = '/'.join([self.api_uri,
+						self.boxes_suffix,
+						box_key,
+						self.fields_suffix,
 						field_key
 						])
 		return self._req('delete', uri)
@@ -770,7 +771,7 @@ class StreakClient(StreakClientBaseObject):
 		'''
 		if detail_level:
 			if detail_level not in ['ALL', 'CONDENSED']:
-				return requests.codes.bad_request, {'success' : 'False', 
+				return requests.codes.bad_request, {'success' : 'False',
 												'error': 'detailLevel needs to be provided and field_type needs to be \'ALL\' or \'CONDENSED\''}
 			uri +=  self.detail_level_suffix + detail_level
 		return self._req('get', uri)
@@ -860,9 +861,9 @@ class StreakClient(StreakClientBaseObject):
 		#print(new_pl.to_dict())
 		#raw_input()
 		code, r_data = self._req('put', uri, new_cmt.to_dict())
-		
+
 		return code, r_data
-	
+
 	def get_box_comments(self, box_key):
 		'''Gets comments in a box with the provided attributes.
 		Args:
@@ -876,7 +877,7 @@ class StreakClient(StreakClientBaseObject):
 						self.comments_suffix
 						])
 		return self._req('get', uri)
-	
+
 	def delete_box_comment(self, box_key, comment_key):
 		'''Deletes comment in a box with the comment_key
 		Args:
@@ -908,19 +909,19 @@ class StreakClient(StreakClientBaseObject):
 		'''
 		uri = '/'.join([
 						self.api_uri,
-						self.boxes_suffix, 
+						self.boxes_suffix,
 						box_key,
 						self.reminders_suffix
 						])
-		kwargs.update({	'message':message, 
-						'remindDate':remind_date, 
+		kwargs.update({	'message':message,
+						'remindDate':remind_date,
 						'remindFollowers': remind_follwers})
 
 		new_rem = StreakReminder(**kwargs)
-		
+
 		code, data = self._req('put', uri, new_rem.to_dict(rw = True))
-		
-		return code, data	
+
+		return code, data
 
 	def update_reminder(self, reminder):
 		'''Creates a reminder with the provided attributes.
@@ -937,14 +938,14 @@ class StreakClient(StreakClientBaseObject):
 			return requests.codes.bad_request, None
 
 		payload = reminder.to_dict(rw = True)
-	
+
 		try:
 			uri = '/'.join([uri, reminder.attributes['key']])
 		except KeyError:
 			return requests.codes.bad_request, None
-	
+
 		code, data = self._req('post', uri , json.dumps(payload))
-		
+
 		return code, data
 
 	def get_box_reminders(self, box_key):
@@ -958,7 +959,7 @@ class StreakClient(StreakClientBaseObject):
 			return requests.codes.bad_request, None
 
 		uri = '/'.join([self.api_uri,
-						self.boxes_suffix, 
+						self.boxes_suffix,
 						box_key,
 						self.reminders_suffix
 						])
@@ -974,7 +975,7 @@ class StreakClient(StreakClientBaseObject):
 		#required sanity check
 		if reminder_key:
 			return requests.codes.bad_request, None
-		
+
 		uri = '/'.join([
 						self.api_uri,
 						self.reminders_suffix,
@@ -1014,27 +1015,27 @@ class StreakClient(StreakClientBaseObject):
 						])
 
 		return self._req('get', uri)
-	
+
 	def get_file_contents(self, file_key):
 		'''Gets file contents
 		Args:
-			file_key		key for the file 
+			file_key		key for the file
 			return			(status code, ?)
 		'''
 		#does not work
 		self._raise_unimplemented_error()
-		
+
 		uri = '/'.join([self.api_uri,
 						self.files_suffix,
 						file_key,
 						self.file_contents_suffix,
 						])
 		return self._req('get', uri)
-	
+
 	def get_file_link(self, file_key):
 		'''Gets link to file
 		Args:
-			file_key		key for the file 
+			file_key		key for the file
 			return			(status code, ?)
 		'''
 		#does not work
@@ -1050,7 +1051,7 @@ class StreakClient(StreakClientBaseObject):
 	def get_box_files(self, box_key):
 		'''Gets to file infos in a single box.
 		Args:
-			box_key		key for the file 
+			box_key		key for the file
 			return		(status code, list of file info dicts)
 		'''
 		uri = '/'.join([self.api_uri,
